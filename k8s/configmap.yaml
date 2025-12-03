@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  ACCEPT_EULA: "Y"
+  ASPNETCORE_ENVIRONMENT: "Development"
+  DB_HOST: "db-catalogo-service"
+  MONGO_HOST: "mongodb-catalogo-service"
+

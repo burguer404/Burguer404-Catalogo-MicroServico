@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalogo-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: catalogo
+  template:
+    metadata:
+      labels:
+        app: catalogo
+    spec:
+      containers:
+      - name: catalogo-service
+        image: catalogo-service:latest
+        ports:
+        - containerPort: 5003
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: ASPNETCORE_ENVIRONMENT
+        - name: ConnectionStrings__CatalogoConnection
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: ConnectionStrings__CatalogoConnection
+        - name: ConnectionStrings__MongoConnection
+          valueFrom:
+            secretKeyRef:
+              name: app-secret
+              key: ConnectionStrings__MongoConnection
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "1000m"
+            memory: "512Mi"
+

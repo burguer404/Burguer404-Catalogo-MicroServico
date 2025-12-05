@@ -42,15 +42,7 @@ jobs:
       working-directory: ${{ env.TF_DIR }}
       run: terraform init
 
-    - name: Download Plan Artifact (if available)
-      uses: actions/download-artifact@v4
-      with:
-        name: terraform-plan
-        path: ${{ env.TF_DIR }}
-      continue-on-error: true
-
-    - name: Terraform Plan (if no artifact)
-      if: failure()
+    - name: Terraform Plan
       working-directory: ${{ env.TF_DIR }}
       run: terraform plan -out=tfplan
 

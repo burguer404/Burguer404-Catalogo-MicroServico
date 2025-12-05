@@ -39,3 +39,9 @@ variable "environment" {
   type        = string
   default     = "dev"
 }
+
+variable "create_resource_group" {
+  description = "Se deve criar o resource group ou usar existente"
+  type        = bool
+  default     = true
+}

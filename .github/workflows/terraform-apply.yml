@@ -42,6 +42,31 @@ jobs:
       working-directory: ${{ env.TF_DIR }}
       run: terraform init
 
+    - name: Obter Subscription ID
+      id: get-subscription
+      run: |
+        SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+        echo "subscription_id=$SUBSCRIPTION_ID" >> $GITHUB_OUTPUT
+        echo "Subscription ID: $SUBSCRIPTION_ID"
+
+    - name: Import Resource Group existente (se necessário)
+      working-directory: ${{ env.TF_DIR }}
+      run: |
+        RG_NAME="rg-burguer404-Catalogo"
+        SUBSCRIPTION_ID="${{ steps.get-subscription.outputs.subscription_id }}"
+        
+        # Verifica se o resource group existe no Azure
+        if az group show --name "$RG_NAME" &>/dev/null; then
+          echo "Resource Group $RG_NAME existe no Azure"
+          echo "Tentando importar para o state do Terraform..."
+          # Tenta importar - se já estiver no state, vai falhar mas não é crítico
+          terraform import azurerm_resource_group.rg[0] /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG_NAME || \
+          echo "Resource Group já está no state ou não pode ser importado (será criado se necessário)"
+        else
+          echo "Resource Group $RG_NAME não existe no Azure, será criado pelo Terraform"
+        fi
+      continue-on-error: true
+
     - name: Terraform Plan
       working-directory: ${{ env.TF_DIR }}
       run: terraform plan -out=tfplan

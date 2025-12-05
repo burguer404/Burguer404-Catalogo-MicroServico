@@ -1,8 +1,10 @@
 name: Deploy no AKS
 
 on:
-  push:
-    branches: [ "main" ]
+  workflow_run:
+    workflows: ["Terraform Apply"]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
 
 env:
@@ -19,11 +21,14 @@ jobs:
   deploy:
     name: Deploy no AKS
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    if: (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') || (github.event_name == 'workflow_dispatch')
 
     steps:
     - name: Checkout código
       uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.workflow_run.head_branch || github.ref }}
+        sha: ${{ github.event.workflow_run.head_sha || github.sha }}
 
     - name: Login na Azure via Service Principal
       uses: azure/login@v1
@@ -69,7 +74,7 @@ jobs:
         kubectl apply -f ${{ env.K8S_DIR }}/catalogo-deployment.yaml || true
         # Atualiza a imagem com a nova versão
         kubectl set image deployment/catalogo-deployment \
-          catalogo-service=${{ env.DOCKER_CATALOGO_IMAGE }}:${{ github.sha }} \
+          catalogo-service=${{ env.DOCKER_CATALOGO_IMAGE }}:${{ github.event.workflow_run.head_sha || github.sha }} \
           || echo "Deployment não encontrado, será criado no próximo apply"
 
     - name: Aplicar HPA e Metrics

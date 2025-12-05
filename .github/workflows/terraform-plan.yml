@@ -1,8 +1,10 @@
 name: Terraform Plan
 
 on:
-  push:
-    branches: [ "**" ]
+  workflow_run:
+    workflows: ["CI - Testes e Build"]
+    types: [completed]
+    branches: [main]
   pull_request:
     branches: [ "**" ]
   workflow_dispatch:
@@ -19,10 +21,14 @@ jobs:
   terraform-plan:
     name: Terraform Plan
     runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
 
     steps:
     - name: Checkout código
       uses: actions/checkout@v3
+      with:
+        ref: ${{ github.event.workflow_run.head_branch || github.ref }}
+        sha: ${{ github.event.workflow_run.head_sha || github.sha }}
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3

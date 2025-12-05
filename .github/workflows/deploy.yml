@@ -1,0 +1,91 @@
+name: Deploy no AKS
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  DOCKER_CATALOGO_IMAGE: mldev7/catalogo-service
+  K8S_DIR: k8s
+  AZURE_RESOURCE_GROUP: rg-burguer404
+  AZURE_AKS_CLUSTER: aks-burguer404
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy no AKS
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v3
+
+    - name: Login na Azure via Service Principal
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Obter credenciais do AKS
+      run: |
+        az aks get-credentials \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --name ${{ env.AZURE_AKS_CLUSTER }} \
+          --overwrite-existing --admin
+
+    - name: Instalar kubectl
+      uses: azure/setup-kubectl@v3
+
+    - name: Aplicar ConfigMap e Secret
+      run: |
+        kubectl apply -f ${{ env.K8S_DIR }}/configmap.yaml
+        kubectl apply -f ${{ env.K8S_DIR }}/secret.yaml
+
+    - name: Aplicar Services (DB e MongoDB)
+      run: |
+        kubectl apply -f ${{ env.K8S_DIR }}/db-service.yaml
+        kubectl apply -f ${{ env.K8S_DIR }}/mongodb-service.yaml
+
+    - name: Aplicar Deployments (DB e MongoDB)
+      run: |
+        kubectl apply -f ${{ env.K8S_DIR }}/db-deployment.yaml
+        kubectl apply -f ${{ env.K8S_DIR }}/mongodb-deployment.yaml
+
+    - name: Aguardar bancos de dados estarem prontos
+      run: |
+        kubectl wait --for=condition=available --timeout=300s deployment/db-deployment || true
+        kubectl wait --for=condition=available --timeout=300s deployment/mongodb-deployment || true
+
+    - name: Aplicar Service do Catálogo
+      run: kubectl apply -f ${{ env.K8S_DIR }}/catalogo-service.yaml
+
+    - name: Aplicar ou atualizar Deployment do Catálogo
+      run: |
+        # Aplica o deployment se não existir
+        kubectl apply -f ${{ env.K8S_DIR }}/catalogo-deployment.yaml || true
+        # Atualiza a imagem com a nova versão
+        kubectl set image deployment/catalogo-deployment \
+          catalogo-service=${{ env.DOCKER_CATALOGO_IMAGE }}:${{ github.sha }} \
+          || echo "Deployment não encontrado, será criado no próximo apply"
+
+    - name: Aplicar HPA e Metrics
+      run: |
+        kubectl apply -f ${{ env.K8S_DIR }}/hpa-catalogo.yaml
+        kubectl apply -f ${{ env.K8S_DIR }}/metrics.yaml
+
+    - name: Verificar rollout do deployment
+      run: |
+        kubectl rollout status deployment/catalogo-deployment --timeout=5m
+
+    - name: Verificar pods
+      run: |
+        kubectl get pods -l app=catalogo
+        kubectl get pods -l app=catalogo-db
+        kubectl get pods -l app=catalogo-mongodb
+
+    - name: Verificar serviços
+      run: kubectl get services

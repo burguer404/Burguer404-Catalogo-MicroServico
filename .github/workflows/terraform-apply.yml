@@ -1,0 +1,59 @@
+name: Terraform Apply
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+env:
+  TF_DIR: infra/terraform
+  TERRAFORM_VERSION: '1.5.7'
+
+concurrency:
+  group: terraform-apply
+  cancel-in-progress: false
+
+jobs:
+  terraform-apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v3
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+    - name: Login na Azure via Service Principal
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Terraform Init
+      working-directory: ${{ env.TF_DIR }}
+      run: terraform init
+
+    - name: Download Plan Artifact (if available)
+      uses: actions/download-artifact@v3
+      with:
+        name: terraform-plan
+        path: ${{ env.TF_DIR }}
+      continue-on-error: true
+
+    - name: Terraform Plan (if no artifact)
+      if: failure()
+      working-directory: ${{ env.TF_DIR }}
+      run: terraform plan -out=tfplan
+
+    - name: Terraform Apply
+      working-directory: ${{ env.TF_DIR }}
+      run: terraform apply -auto-approve tfplan
+
+    - name: Output Terraform
+      working-directory: ${{ env.TF_DIR }}
+      run: terraform output
+

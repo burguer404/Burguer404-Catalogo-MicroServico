@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: catalogo-service
-        image: catalogo-service:latest
+        image: mldev7/catalogo-service:latest
         ports:
         - containerPort: 5003
         env:

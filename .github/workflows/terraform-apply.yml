@@ -67,6 +67,25 @@ jobs:
         fi
       continue-on-error: true
 
+    - name: Import AKS Cluster existente (se necessário)
+      working-directory: ${{ env.TF_DIR }}
+      run: |
+        CLUSTER_NAME="aks-burguer404-Catalogo"
+        RG_NAME="rg-burguer404-Catalogo"
+        SUBSCRIPTION_ID="${{ steps.get-subscription.outputs.subscription_id }}"
+        
+        # Verifica se o cluster AKS existe no Azure
+        if az aks show --name "$CLUSTER_NAME" --resource-group "$RG_NAME" &>/dev/null; then
+          echo "Cluster AKS $CLUSTER_NAME existe no Azure"
+          echo "Tentando importar para o state do Terraform..."
+          # Importa o cluster AKS
+          terraform import azurerm_kubernetes_cluster.aks /subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG_NAME/providers/Microsoft.ContainerService/managedClusters/$CLUSTER_NAME || \
+          echo "Cluster AKS já está no state ou não pode ser importado"
+        else
+          echo "Cluster AKS $CLUSTER_NAME não existe no Azure, será criado pelo Terraform"
+        fi
+      continue-on-error: true
+
     - name: Terraform Plan
       working-directory: ${{ env.TF_DIR }}
       run: terraform plan -out=tfplan

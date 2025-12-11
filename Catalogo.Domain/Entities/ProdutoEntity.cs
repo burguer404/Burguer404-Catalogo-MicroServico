@@ -7,7 +7,7 @@ namespace Catalogo.Domain.Entities
     {
         public string Nome { get; set; } = string.Empty;
         public string Descricao { get; set; } = string.Empty;
-        public decimal Preco { get; set; }
+        public double Preco { get; set; }
         public int CategoriaId { get; set; }
         public virtual CategoriaEntity Categoria { get; set; } = null!;
         public bool Status { get; set; } = true;

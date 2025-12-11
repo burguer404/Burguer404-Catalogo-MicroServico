@@ -6,7 +6,7 @@ namespace Catalogo.Domain.Arguments
     {
         public string Nome { get; set; } = string.Empty;
         public string Descricao { get; set; } = string.Empty;
-        public decimal Preco { get; set; }
+        public double Preco { get; set; }
         public int CategoriaId { get; set; }
         public string CategoriaDescricao { get; set; } = string.Empty;
         public string ImagemBase64 { get; set; } = string.Empty;

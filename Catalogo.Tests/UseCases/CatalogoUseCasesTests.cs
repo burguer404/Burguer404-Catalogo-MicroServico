@@ -18,7 +18,7 @@ namespace Catalogo.Tests.UseCases
             { 
                 Nome = "Hambúrguer",
                 Descricao = "Delicioso hambúrguer",
-                Preco = 25.50m,
+                Preco = 25.50,
                 CategoriaId = 1
             };
             
@@ -59,7 +59,7 @@ namespace Catalogo.Tests.UseCases
             { 
                 Nome = "Hambúrguer",
                 Descricao = "Delicioso hambúrguer",
-                Preco = 25.50m,
+                Preco = 25.50,
                 CategoriaId = 1
             };
             
@@ -131,7 +131,7 @@ namespace Catalogo.Tests.UseCases
                 Id = 1,
                 Nome = "Hambúrguer Atualizado",
                 Descricao = "Hambúrguer ainda mais delicioso",
-                Preco = 30.00m,
+                Preco = 30.00,
                 CategoriaId = 1,
                 Status = true
             };
@@ -176,7 +176,7 @@ namespace Catalogo.Tests.UseCases
                 Id = 1,
                 Nome = "Hambúrguer Atualizado",
                 Descricao = "Hambúrguer ainda mais delicioso",
-                Preco = 30.00m,
+                Preco = 30.00,
                 CategoriaId = 1
             };
             
@@ -206,7 +206,7 @@ namespace Catalogo.Tests.UseCases
                 Id = 1,
                 Nome = "Hambúrguer",
                 Descricao = "Delicioso hambúrguer",
-                Preco = 25.50m,
+                Preco = 25.50,
                 CategoriaId = 1,
                 Status = null
             };
@@ -298,8 +298,8 @@ namespace Catalogo.Tests.UseCases
             // Arrange
             var produtos = new List<ProdutoEntity> 
             { 
-                new ProdutoEntity { Nome = "Produto 1", Preco = 10.0m },
-                new ProdutoEntity { Nome = "Produto 2", Preco = 20.0m }
+                new ProdutoEntity { Nome = "Produto 1", Preco = 10.0 },
+                new ProdutoEntity { Nome = "Produto 2", Preco = 20.0 }
             };
             
             var gatewayMock = new Mock<ICatalogoGateway>();
@@ -356,7 +356,7 @@ namespace Catalogo.Tests.UseCases
             { 
                 Id = produtoId, 
                 Nome = "Produto Teste",
-                Preco = 15.0m
+                Preco = 15.0
             };
             
             var gatewayMock = new Mock<ICatalogoGateway>();
@@ -411,9 +411,8 @@ namespace Catalogo.Tests.UseCases
             // Arrange
             var produtos = new List<ProdutoEntity> 
             { 
-                new ProdutoEntity { Nome = "Hambúrguer", Status = true, Preco = 25.0m },
-                new ProdutoEntity { Nome = "Batata Frita", Status = true, Preco = 8.0m },
-                new ProdutoEntity { Nome = "Produto Inativo", Status = false, Preco = 10.0m }
+                new ProdutoEntity { Nome = "Batata Frita", Status = true, Preco = 8.0 },
+                new ProdutoEntity { Nome = "Produto Inativo", Status = false, Preco = 10.0 }
             };
             
             var cardapio = new CardapioResponse
@@ -431,8 +430,8 @@ namespace Catalogo.Tests.UseCases
                         Ativa = true,
                         Produtos = new List<ProdutoResponse>
                         {
-                            new ProdutoResponse { Id = 1, Nome = "Hambúrguer", Preco = 25.0m, CategoriaId = 1 },
-                            new ProdutoResponse { Id = 2, Nome = "Batata Frita", Preco = 8.0m, CategoriaId = 1 }
+                            new ProdutoResponse { Id = 1, Nome = "Hambúrguer", Preco = 25.0, CategoriaId = 1 },
+                            new ProdutoResponse { Id = 2, Nome = "Batata Frita", Preco = 8.0, CategoriaId = 1 }
                         }
                     }
                 }

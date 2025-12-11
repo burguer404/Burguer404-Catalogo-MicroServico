@@ -18,6 +18,13 @@ namespace Catalogo.Infrastructure.Maps
             builder.Property(x => x.Ativa).IsRequired();
 
             builder.HasIndex(x => x.Descricao).IsUnique();
+
+            builder.HasData(
+                new CategoriaEntity { Id = 1, Descricao = "Lanche" },
+                new CategoriaEntity { Id = 2, Descricao = "Acompanhamento" },
+                new CategoriaEntity { Id = 3, Descricao = "Bebida" },
+                new CategoriaEntity { Id = 4, Descricao = "Sobremesa" }
+            );
         }
     }
 }

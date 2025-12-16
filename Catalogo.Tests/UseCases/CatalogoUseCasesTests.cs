@@ -323,8 +323,7 @@ namespace Catalogo.Tests.UseCases
                       .ReturnsAsync(produtoEntity);
 
             var imagemGatewayMock = new Mock<IImagemProdutoGateway>();
-            // Primeira chamada: verificar se imagem existe (antes de atualizar)
-            // Segunda chamada: obter imagem atualizada (para retornar no response)
+            
             imagemGatewayMock.SetupSequence(i => i.ObterImagemPorProdutoIdAsync(request.Id))
                            .ReturnsAsync(imagemExistente)
                            .ReturnsAsync(imagemAtualizada);
@@ -379,8 +378,7 @@ namespace Catalogo.Tests.UseCases
             };
 
             var imagemGatewayMock = new Mock<IImagemProdutoGateway>();
-            // Primeira chamada: verificar se imagem existe (deve retornar null para criar nova)
-            // Segunda chamada: obter imagem criada (para retornar no response)
+            
             imagemGatewayMock.SetupSequence(i => i.ObterImagemPorProdutoIdAsync(request.Id))
                            .ReturnsAsync((ImagemProdutoEntity?)null)
                            .ReturnsAsync(imagemCriada);

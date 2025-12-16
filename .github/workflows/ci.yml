@@ -36,7 +36,71 @@ jobs:
       run: dotnet build --no-restore --configuration Release
 
     - name: Executar testes
-      run: dotnet test --no-build --configuration Release --verbosity normal
+      run: dotnet test --no-build --configuration Release --collect:"XPlat Code Coverage"
+
+    - name: Localizar arquivo de cobertura
+      id: find_coverage
+      run: |
+        FILE=$(find . -name "coverage.cobertura.xml" | head -n 1)
+        echo "Arquivo encontrado: $FILE"
+        echo "coveragefile=$FILE" >> $GITHUB_OUTPUT
+
+    - name: Instalar ReportGenerator
+      run: dotnet tool install -g dotnet-reportgenerator-globaltool
+
+    - name: Gerar relatório de cobertura
+      run: |
+        reportgenerator \
+          -reports:"${{ steps.find_coverage.outputs.coveragefile }}" \
+          -targetdir:"coveragereport" \
+          -assemblyfilters:"+Catalogo.Application" \
+          -classfilters:"+Catalogo.Application.UseCases*" \
+          -reporttypes:"TextSummary"
+
+    - name: Mostrar % de Coverage no log
+      run: |
+        echo "---- Resultado da cobertura ----"
+        cat coveragereport/Summary.txt
+
+        COVERAGE=$(grep -oP 'Line coverage:\s+\K[0-9]+' coveragereport/Summary.txt)
+        echo "Cobertura de linhas: $COVERAGE%"
+
+  sonar:
+    runs-on: windows-latest
+    name: SonarCloud
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Install SonarScanner
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: Sonar begin
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          dotnet sonarscanner begin `
+            /k:"burguer404_Burguer404-Catalogo-MicroServico" `
+            /o:"burguer404-1" `
+            /d:sonar.cs.cobertura.reportsPaths="**/coverage.cobertura.xml" `
+            /d:sonar.qualitygate.wait=true
+
+      - name: Test with coverage
+        run: dotnet test --collect:"XPlat Code Coverage"
+
+      - name: Sonar end
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end
+
 
   build-and-push:
     name: Build e Push Docker

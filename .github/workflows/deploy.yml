@@ -10,8 +10,8 @@ on:
 env:
   DOCKER_CATALOGO_IMAGE: mldev7/catalogo-service
   K8S_DIR: k8s
-  AZURE_RESOURCE_GROUP: rg-burguer404-Catalogo
-  AZURE_AKS_CLUSTER: aks-burguer404-Catalogo
+  AZURE_RESOURCE_GROUP: rg-catalogo
+  AZURE_AKS_CLUSTER: aks-catalogo
 
 concurrency:
   group: deploy

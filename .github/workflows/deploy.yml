@@ -48,22 +48,8 @@ jobs:
     - name: Aplicar ConfigMap e Secret
       run: |
         kubectl apply -f ${{ env.K8S_DIR }}/configmap.yaml
-        kubectl apply -f ${{ env.K8S_DIR }}/secret.yaml
-
-    - name: Aplicar Services (DB e MongoDB)
-      run: |
-        kubectl apply -f ${{ env.K8S_DIR }}/db-service.yaml
-        kubectl apply -f ${{ env.K8S_DIR }}/mongodb-service.yaml
-
-    - name: Aplicar Deployments (DB e MongoDB)
-      run: |
-        kubectl apply -f ${{ env.K8S_DIR }}/db-deployment.yaml
-        kubectl apply -f ${{ env.K8S_DIR }}/mongodb-deployment.yaml
-
-    - name: Aguardar bancos de dados estarem prontos
-      run: |
-        kubectl wait --for=condition=available --timeout=300s deployment/db-deployment || true
-        kubectl wait --for=condition=available --timeout=300s deployment/mongodb-deployment || true
+        kubectl apply -f ${{ env.K8S_DIR }}/secret.yaml    
+   
 
     - name: Aplicar Service do Catálogo
       run: kubectl apply -f ${{ env.K8S_DIR }}/catalogo-service.yaml
@@ -88,9 +74,7 @@ jobs:
 
     - name: Verificar pods
       run: |
-        kubectl get pods -l app=catalogo
-        kubectl get pods -l app=catalogo-db
-        kubectl get pods -l app=catalogo-mongodb
+        kubectl get pods -l app=catalogo     
 
     - name: Verificar serviços
       run: kubectl get services

@@ -2,6 +2,7 @@
 
 Microserviço responsável pelo gerenciamento de produtos e cardápio da lanchonete **Burguer404**. Permite o cadastro, edição, remoção e listagem de produtos, organizados por categorias.
 
+
 ## Tecnologias Utilizadas
 
 - **.NET 8.0**: Framework principal.

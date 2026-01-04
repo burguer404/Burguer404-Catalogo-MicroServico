@@ -4,6 +4,7 @@ namespace Catalogo.Domain.Utils
 {
     public static class ConverterImagem
     {
+        // Méotodo para conversão de IFormFile para byte[]
         public static byte[] ConverterMemoryStream(IFormFile? imagem)
         {
             if (imagem == null || imagem.Length == 0)

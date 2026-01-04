@@ -82,3 +82,6 @@ O projeto segue a **Clean Architecture**:
 ## Infraestrutura e Deploy
 
 O projeto utiliza GitHub Actions para automação de testes, infraestrutura (Terraform) e deploy no Azure Kubernetes Service (AKS).
+
+## SonarQube
+- o	https://sonarcloud.io/project/overview?id=burguer404_Burguer404-Catalogo-MicroServico

@@ -1,8 +1,9 @@
+using Catalogo.Application.Presenters;
 using Catalogo.Domain.Arguments;
 using Catalogo.Domain.Arguments.Base;
 using Catalogo.Domain.Entities;
 using Catalogo.Domain.Interfaces;
-using Catalogo.Application.Presenters;
+using Microsoft.AspNetCore.Http;
 
 namespace Catalogo.Application.UseCases
 {
@@ -22,7 +23,7 @@ namespace Catalogo.Application.UseCases
             return new CriarProdutoUseCase(gateway, imagemGateway);
         }
 
-        public async Task<ResponseBase<ProdutoResponse>> ExecuteAsync(ProdutoRequest request)
+        public async Task<ResponseBase<ProdutoResponse>> ExecuteAsync(ProdutoRequest request, byte[] imagem)
         {
             var produto = new ProdutoEntity
             {
@@ -42,12 +43,12 @@ namespace Catalogo.Application.UseCases
                 return new ResponseBase<ProdutoResponse>() { Sucesso = false, Mensagem = "Erro ao criar produto", Resultado = [] };
             }
 
-            if (request.ImagemByte != null && request.ImagemByte.Length > 0)
+            if (imagem != null && imagem.Length > 0)
             {
                 var imagemProduto = new ImagemProdutoEntity
                 {
                     ProdutoId = produtoCriado.Id,
-                    ImagemByte = request.ImagemByte,
+                    ImagemByte = imagem
                 };
 
                 await _imagemGateway.CriarImagemAsync(imagemProduto);
@@ -56,13 +57,14 @@ namespace Catalogo.Application.UseCases
             return CatalogoPresenter.ObterProdutoResponse(produtoCriado);
         }
 
-        public Task<byte[]?> ConverterMemoryStream(ProdutoRequest request)
+        public async Task<byte[]?> ConverterMemoryStream(IFormFile? imagem)
         {
-            if (request.ImagemByte != null)
-            {
-                return Task.FromResult<byte[]?>(request.ImagemByte);
-            }
-            return Task.FromResult<byte[]?>(null);
+            if (imagem == null || imagem.Length == 0)
+                return null;
+
+            using var ms = new MemoryStream();
+            await imagem.CopyToAsync(ms);
+            return ms.ToArray();
         }
     }
 }

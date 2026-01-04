@@ -1,8 +1,9 @@
 using Catalogo.Application.UseCases;
+using Catalogo.Domain.Arguments;
 using Catalogo.Domain.Entities;
 using Catalogo.Domain.Interfaces;
-using Catalogo.Domain.Arguments.Base;
-using Catalogo.Domain.Arguments;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Internal;
 using Moq;
 using Xunit;
 
@@ -41,7 +42,7 @@ namespace Catalogo.Tests.UseCases
             var useCase = new CriarProdutoUseCase(gatewayMock.Object, imagemGatewayMock.Object);
 
             // Act
-            var result = await useCase.ExecuteAsync(request);
+            var result = await useCase.ExecuteAsync(request, []);
 
             // Assert
             Assert.NotNull(result);
@@ -72,7 +73,7 @@ namespace Catalogo.Tests.UseCases
             var useCase = new CriarProdutoUseCase(gatewayMock.Object, imagemGatewayMock.Object);
 
             // Act
-            var result = await useCase.ExecuteAsync(request);
+            var result = await useCase.ExecuteAsync(request, []);
 
             // Assert
             Assert.NotNull(result);
@@ -84,20 +85,38 @@ namespace Catalogo.Tests.UseCases
         public async Task ConverterMemoryStream_DeveRetornarBytes_QuandoImagemExiste()
         {
             // Arrange
-            var request = new ProdutoRequest 
-            { 
-                Nome = "Hambúrguer",
-                ImagemByte = new byte[] { 1, 2, 3, 4 }
+            var bytesEsperados = new byte[] { 1, 2, 3, 4 };
+            var stream = new MemoryStream(bytesEsperados);
+
+            IFormFile formFile = new FormFile(
+                baseStream: stream,
+                baseStreamOffset: 0,
+                length: bytesEsperados.Length,
+                name: "Imagem",
+                fileName: "imagem.png"
+            )
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "image/png"
             };
-            
-            var useCase = new CriarProdutoUseCase(Mock.Of<ICatalogoGateway>(), Mock.Of<IImagemProdutoGateway>());
+
+            var request = new ProdutoRequest
+            {
+                Nome = "Hambúrguer",
+                Imagem = formFile
+            };
+
+            var useCase = new CriarProdutoUseCase(
+                Mock.Of<ICatalogoGateway>(),
+                Mock.Of<IImagemProdutoGateway>()
+            );
 
             // Act
-            var result = await useCase.ConverterMemoryStream(request);
+            var result = await useCase.ConverterMemoryStream(request.Imagem);
 
             // Assert
             Assert.NotNull(result);
-            Assert.Equal(new byte[] { 1, 2, 3, 4 }, result);
+            Assert.Equal(bytesEsperados, result);
         }
 
         [Fact]
@@ -107,13 +126,13 @@ namespace Catalogo.Tests.UseCases
             var request = new ProdutoRequest 
             { 
                 Nome = "Hambúrguer",
-                ImagemByte = null
+                Imagem = null
             };
             
             var useCase = new CriarProdutoUseCase(Mock.Of<ICatalogoGateway>(), Mock.Of<IImagemProdutoGateway>());
 
             // Act
-            var result = await useCase.ConverterMemoryStream(request);
+            var result = await useCase.ConverterMemoryStream(request.Imagem);
 
             // Assert
             Assert.Null(result);
@@ -130,7 +149,7 @@ namespace Catalogo.Tests.UseCases
                 Descricao = "Delicioso hambúrguer",
                 Preco = 25.50,
                 CategoriaId = 1,
-                ImagemByte = imagemBytes
+                Imagem = null
             };
             
             var produtoEntity = new ProdutoEntity 
@@ -152,7 +171,7 @@ namespace Catalogo.Tests.UseCases
             var useCase = new CriarProdutoUseCase(gatewayMock.Object, imagemGatewayMock.Object);
 
             // Act
-            var result = await useCase.ExecuteAsync(request);
+            var result = await useCase.ExecuteAsync(request, imagemBytes);
 
             // Assert
             Assert.NotNull(result);
@@ -283,21 +302,28 @@ namespace Catalogo.Tests.UseCases
         public async Task ExecuteAsync_DeveAtualizarImagem_QuandoImagemJaExiste()
         {
             // Arrange
-            var imagemBytesAntigos = new byte[] { 1, 2, 3 };
-            var imagemBytesNovos = new byte[] { 4, 5, 6 };
-            var request = new ProdutoRequest 
-            { 
+            var bytesEsperados = new byte[] { 1, 2, 3, 4 };
+            var stream = new MemoryStream(bytesEsperados);
+
+            IFormFile formFile = new FormFile(stream, 0, bytesEsperados.Length, "Imagem", "imagem.png")
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "image/png"
+            };
+
+            var request = new ProdutoRequest
+            {
                 Id = 1,
                 Nome = "Hambúrguer Atualizado",
                 Descricao = "Hambúrguer ainda mais delicioso",
                 Preco = 30.00,
                 CategoriaId = 1,
                 Status = true,
-                ImagemByte = imagemBytesNovos
+                Imagem = formFile
             };
-            
-            var produtoEntity = new ProdutoEntity 
-            { 
+
+            var produtoEntity = new ProdutoEntity
+            {
                 Id = request.Id,
                 Nome = request.Nome,
                 Descricao = request.Descricao,
@@ -309,26 +335,26 @@ namespace Catalogo.Tests.UseCases
             var imagemExistente = new ImagemProdutoEntity
             {
                 ProdutoId = request.Id,
-                ImagemByte = imagemBytesAntigos
+                ImagemByte = new byte[] { 9, 9, 9 }
             };
 
-            var imagemAtualizada = new ImagemProdutoEntity
-            {
-                ProdutoId = request.Id,
-                ImagemByte = imagemBytesNovos
-            };
-            
             var gatewayMock = new Mock<ICatalogoGateway>();
             gatewayMock.Setup(g => g.AtualizarProdutoAsync(It.IsAny<ProdutoEntity>()))
-                      .ReturnsAsync(produtoEntity);
+                       .ReturnsAsync(produtoEntity);
 
             var imagemGatewayMock = new Mock<IImagemProdutoGateway>();
-            
-            imagemGatewayMock.SetupSequence(i => i.ObterImagemPorProdutoIdAsync(request.Id))
-                           .ReturnsAsync(imagemExistente)
-                           .ReturnsAsync(imagemAtualizada);
+            imagemGatewayMock.Setup(i => i.ObterImagemPorProdutoIdAsync(request.Id))
+                             .ReturnsAsync(imagemExistente);
 
-            var useCase = new AtualizarProdutoUseCase(gatewayMock.Object, imagemGatewayMock.Object);
+            imagemGatewayMock
+                        .Setup(i => i.AtualizarImagemAsync(It.IsAny<ImagemProdutoEntity>()))
+                        .ReturnsAsync((ImagemProdutoEntity img) => img);
+
+
+            var useCase = new AtualizarProdutoUseCase(
+                gatewayMock.Object,
+                imagemGatewayMock.Object
+            );
 
             // Act
             var result = await useCase.ExecuteAsync(request);
@@ -336,29 +362,43 @@ namespace Catalogo.Tests.UseCases
             // Assert
             Assert.NotNull(result);
             Assert.True(result.Sucesso);
-            imagemGatewayMock.Verify(i => i.AtualizarImagemAsync(It.Is<ImagemProdutoEntity>(img => 
-                img.ProdutoId == request.Id && 
-                img.ImagemByte == imagemBytesNovos)), Times.Once);
+
+            imagemGatewayMock.Verify(i =>
+                i.AtualizarImagemAsync(It.Is<ImagemProdutoEntity>(img =>
+                    img.ProdutoId == request.Id &&
+                    img.ImagemByte.SequenceEqual(bytesEsperados)
+                )),
+                Times.Once
+            );
         }
+
 
         [Fact]
         public async Task ExecuteAsync_DeveCriarImagem_QuandoImagemNaoExiste()
         {
             // Arrange
-            var imagemBytes = new byte[] { 1, 2, 3, 4 };
-            var request = new ProdutoRequest 
-            { 
+            var bytesEsperados = new byte[] { 1, 2, 3, 4 };
+            var stream = new MemoryStream(bytesEsperados);
+
+            IFormFile formFile = new FormFile(stream, 0, bytesEsperados.Length, "Imagem", "imagem.png")
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "image/png"
+            };
+
+            var request = new ProdutoRequest
+            {
                 Id = 1,
                 Nome = "Hambúrguer Atualizado",
                 Descricao = "Hambúrguer ainda mais delicioso",
                 Preco = 30.00,
                 CategoriaId = 1,
                 Status = true,
-                ImagemByte = imagemBytes
+                Imagem = formFile
             };
-            
-            var produtoEntity = new ProdutoEntity 
-            { 
+
+            var produtoEntity = new ProdutoEntity
+            {
                 Id = request.Id,
                 Nome = request.Nome,
                 Descricao = request.Descricao,
@@ -366,24 +406,24 @@ namespace Catalogo.Tests.UseCases
                 CategoriaId = request.CategoriaId,
                 Status = request.Status.Value
             };
-            
+
             var gatewayMock = new Mock<ICatalogoGateway>();
             gatewayMock.Setup(g => g.AtualizarProdutoAsync(It.IsAny<ProdutoEntity>()))
-                      .ReturnsAsync(produtoEntity);
-
-            var imagemCriada = new ImagemProdutoEntity
-            {
-                ProdutoId = request.Id,
-                ImagemByte = imagemBytes
-            };
+                       .ReturnsAsync(produtoEntity);
 
             var imagemGatewayMock = new Mock<IImagemProdutoGateway>();
-            
-            imagemGatewayMock.SetupSequence(i => i.ObterImagemPorProdutoIdAsync(request.Id))
-                           .ReturnsAsync((ImagemProdutoEntity?)null)
-                           .ReturnsAsync(imagemCriada);
+            imagemGatewayMock.Setup(i => i.ObterImagemPorProdutoIdAsync(request.Id))
+                             .ReturnsAsync((ImagemProdutoEntity?)null);
 
-            var useCase = new AtualizarProdutoUseCase(gatewayMock.Object, imagemGatewayMock.Object);
+            imagemGatewayMock
+                        .Setup(i => i.CriarImagemAsync(It.IsAny<ImagemProdutoEntity>()))
+                        .ReturnsAsync((ImagemProdutoEntity img) => img);
+
+
+            var useCase = new AtualizarProdutoUseCase(
+                gatewayMock.Object,
+                imagemGatewayMock.Object
+            );
 
             // Act
             var result = await useCase.ExecuteAsync(request);
@@ -391,10 +431,16 @@ namespace Catalogo.Tests.UseCases
             // Assert
             Assert.NotNull(result);
             Assert.True(result.Sucesso);
-            imagemGatewayMock.Verify(i => i.CriarImagemAsync(It.Is<ImagemProdutoEntity>(img => 
-                img.ProdutoId == request.Id && 
-                img.ImagemByte == imagemBytes)), Times.Once);
+
+            imagemGatewayMock.Verify(i =>
+                i.CriarImagemAsync(It.Is<ImagemProdutoEntity>(img =>
+                    img.ProdutoId == request.Id &&
+                    img.ImagemByte.SequenceEqual(bytesEsperados)
+                )),
+                Times.Once
+            );
         }
+
 
         [Fact]
         public async Task ExecuteAsync_DeveRetornarImagemBase64_QuandoImagemExiste()
@@ -507,7 +553,7 @@ namespace Catalogo.Tests.UseCases
                 Preco = 30.00,
                 CategoriaId = 1,
                 Status = true,
-                ImagemByte = null
+                Imagem = null
             };
             
             var produtoEntity = new ProdutoEntity 

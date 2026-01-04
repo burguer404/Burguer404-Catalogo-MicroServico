@@ -1,4 +1,5 @@
 using Catalogo.Domain.Arguments.Base;
+using Microsoft.AspNetCore.Http;
 
 namespace Catalogo.Domain.Arguments
 {
@@ -8,7 +9,7 @@ namespace Catalogo.Domain.Arguments
         public string Descricao { get; set; } = string.Empty;
         public double Preco { get; set; }
         public int CategoriaId { get; set; }
-        public byte[]? ImagemByte { get; set; }
+        public IFormFile? Imagem { get; set; }
         public bool? Status { get; set; }
     }
 }

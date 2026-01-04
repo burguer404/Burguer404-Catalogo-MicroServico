@@ -50,8 +50,16 @@ namespace Catalogo.Application.UseCases
                     ProdutoId = produtoCriado.Id,
                     ImagemByte = imagem
                 };
+                try
+                {
+                    await _imagemGateway.CriarImagemAsync(imagemProduto);
 
-                await _imagemGateway.CriarImagemAsync(imagemProduto);
+                }
+                catch (Exception ex)
+                {
+
+                    throw new Exception("erro mongodb" + ex);
+                }
             }
 
             return CatalogoPresenter.ObterProdutoResponse(produtoCriado);

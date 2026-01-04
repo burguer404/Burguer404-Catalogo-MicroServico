@@ -2,6 +2,7 @@ using Catalogo.Application.UseCases;
 using Catalogo.Domain.Arguments;
 using Catalogo.Domain.Entities;
 using Catalogo.Domain.Interfaces;
+using Catalogo.Domain.Utils;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
 using Moq;
@@ -112,7 +113,7 @@ namespace Catalogo.Tests.UseCases
             );
 
             // Act
-            var result = await useCase.ConverterMemoryStream(request.Imagem);
+            var result = ConverterImagem.ConverterMemoryStream(request.Imagem);
 
             // Assert
             Assert.NotNull(result);
@@ -120,7 +121,7 @@ namespace Catalogo.Tests.UseCases
         }
 
         [Fact]
-        public async Task ConverterMemoryStream_DeveRetornarNull_QuandoImagemNaoExiste()
+        public async Task ConverterMemoryStream_DeveRetornarVazio_QuandoImagemNaoExiste()
         {
             // Arrange
             var request = new ProdutoRequest 
@@ -132,10 +133,10 @@ namespace Catalogo.Tests.UseCases
             var useCase = new CriarProdutoUseCase(Mock.Of<ICatalogoGateway>(), Mock.Of<IImagemProdutoGateway>());
 
             // Act
-            var result = await useCase.ConverterMemoryStream(request.Imagem);
+            var result = ConverterImagem.ConverterMemoryStream(request.Imagem);
 
             // Assert
-            Assert.Null(result);
+            Assert.Empty(result);
         }
 
         [Fact]

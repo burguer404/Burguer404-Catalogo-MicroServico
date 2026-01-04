@@ -3,6 +3,7 @@ using Catalogo.Domain.Arguments;
 using Catalogo.Domain.Arguments.Base;
 using Catalogo.Domain.Entities;
 using Catalogo.Domain.Interfaces;
+using Catalogo.Domain.Utils;
 using Microsoft.AspNetCore.Http;
 
 namespace Catalogo.Application.UseCases
@@ -49,7 +50,7 @@ namespace Catalogo.Application.UseCases
                 
                 if (imagemExistente != null)
                 {
-                    imagemExistente.ImagemByte = await ConverterMemoryStream(request.Imagem) ?? [];
+                    imagemExistente.ImagemByte = ConverterImagem.ConverterMemoryStream(request.Imagem) ?? [];
                     await _imagemGateway.AtualizarImagemAsync(imagemExistente);
                 }
                 else
@@ -57,7 +58,7 @@ namespace Catalogo.Application.UseCases
                     var imagemProduto = new ImagemProdutoEntity
                     {
                         ProdutoId = produtoAtualizado.Id,
-                        ImagemByte = await ConverterMemoryStream(request.Imagem) ?? []
+                        ImagemByte = ConverterImagem.ConverterMemoryStream(request.Imagem) ?? []
                     };
                     await _imagemGateway.CriarImagemAsync(imagemProduto);
                 }
@@ -71,16 +72,6 @@ namespace Catalogo.Application.UseCases
             }
 
             return CatalogoPresenter.ObterProdutoResponse(produtoAtualizado, imagemBase64);
-        }
-
-        public async Task<byte[]?> ConverterMemoryStream(IFormFile? imagem)
-        {
-            if (imagem == null || imagem.Length == 0)
-                return null;
-
-            using var ms = new MemoryStream();
-            await imagem.CopyToAsync(ms);
-            return ms.ToArray();
         }
     }
 }

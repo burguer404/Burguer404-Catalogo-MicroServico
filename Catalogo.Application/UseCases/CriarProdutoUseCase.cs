@@ -57,14 +57,6 @@ namespace Catalogo.Application.UseCases
             return CatalogoPresenter.ObterProdutoResponse(produtoCriado);
         }
 
-        public async Task<byte[]?> ConverterMemoryStream(IFormFile? imagem)
-        {
-            if (imagem == null || imagem.Length == 0)
-                return null;
-
-            using var ms = new MemoryStream();
-            await imagem.CopyToAsync(ms);
-            return ms.ToArray();
-        }
+        
     }
 }

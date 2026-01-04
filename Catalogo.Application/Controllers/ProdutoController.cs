@@ -3,6 +3,7 @@ using Catalogo.Application.UseCases;
 using Catalogo.Domain.Arguments;
 using Catalogo.Domain.Arguments.Base;
 using Catalogo.Domain.Interfaces;
+using Catalogo.Domain.Utils;
 
 namespace Catalogo.Application.Controllers
 {
@@ -20,7 +21,7 @@ namespace Catalogo.Application.Controllers
         public async Task<ResponseBase<ProdutoResponse>> CadastrarProduto(ProdutoRequest request)
         {
             var useCase = CriarProdutoUseCase.Create(_gateway, _imagemGateway);
-            var imagemEmBytes = await useCase.ConverterMemoryStream(request.Imagem);
+            var imagemEmBytes = ConverterImagem.ConverterMemoryStream(request.Imagem);
             var response = await useCase.ExecuteAsync(request, imagemEmBytes ?? []);
             return response;
         }

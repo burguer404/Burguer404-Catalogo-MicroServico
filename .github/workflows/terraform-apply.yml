@@ -52,7 +52,7 @@ jobs:
     - name: Import Resource Group existente (se necessário)
       working-directory: ${{ env.TF_DIR }}
       run: |
-        RG_NAME="rg-burguer404-Catalogo"
+        RG_NAME="rg-catalogo"
         SUBSCRIPTION_ID="${{ steps.get-subscription.outputs.subscription_id }}"
         
         # Verifica se o resource group existe no Azure
@@ -70,8 +70,8 @@ jobs:
     - name: Import AKS Cluster existente (se necessário)
       working-directory: ${{ env.TF_DIR }}
       run: |
-        CLUSTER_NAME="aks-burguer404-Catalogo"
-        RG_NAME="rg-burguer404-Catalogo"
+        CLUSTER_NAME="aks-catalogo"
+        RG_NAME="rg-catalogo"
         SUBSCRIPTION_ID="${{ steps.get-subscription.outputs.subscription_id }}"
         
         # Verifica se o cluster AKS existe no Azure

@@ -1,25 +1,25 @@
 variable "resource_group_name" {
   description = "Nome do Resource Group no Azure"
   type        = string
-  default     = "rg-burguer404-Catalogo"
+  default     = "rg-catalogo"
 }
 
 variable "location" {
   description = "Localização dos recursos no Azure"
   type        = string
-  default     = "East US"
+  default     = "Central US"
 }
 
 variable "aks_cluster_name" {
   description = "Nome do cluster AKS"
   type        = string
-  default     = "aks-burguer404-Catalogo"
+  default     = "aks-catalogo"
 }
 
 variable "dns_prefix" {
   description = "Prefixo DNS para o cluster AKS"
   type        = string
-  default     = "aksburguer404Catalogo"
+  default     = "akscatalogo"
 }
 
 variable "node_count" {
